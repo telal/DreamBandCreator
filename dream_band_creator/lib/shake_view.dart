@@ -24,7 +24,7 @@ class ShakeView extends StatelessWidget {
 
   Vector3 _shake(double progress) {
     double offset = sin(progress * pi * 10.0);
-    return Vector3(offset * 4, 0.0, 0.0);
+    return Vector3(0.0, offset * 4, 0.0);
   }
 }
 

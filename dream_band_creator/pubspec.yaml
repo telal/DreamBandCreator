@@ -47,7 +47,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/guitar.png
     - assets/images/guitar_cut.png
     - assets/sounds/Piano.sf2
     - assets/sounds/Guitar.SF2
