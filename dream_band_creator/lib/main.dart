@@ -52,7 +52,24 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   @override
-  Widget build(BuildContext context) => GuitarWidget();
+  Widget build(BuildContext context) {
+    return Container(
+      child: new GestureDetector(
+          onPanUpdate: (detail){
+            print("its Dragged");
+            print("global dx : "+detail.globalPosition.dx.toString());
+            print("global dy : "+detail.globalPosition.dy.toString());
+
+            RenderBox box = context.findRenderObject();
+            Offset local = box.globalToLocal(detail.globalPosition);
+
+            print("local dx : "+local.dx.toString());
+            print("local dy : "+local.dy.toString());
+          },
+        child: GuitarWidget(),
+      )
+    );
+  }
 
 }
 
@@ -68,12 +85,12 @@ class GuitarWidget extends StatelessWidget {
 Widget _buildGuitarStringList(BuildContext context, int stringAmount) {
   final width = MediaQuery.of(context).size.width;
   List<GuitarStringWidget> guitarStringWidgets = [
-    GuitarStringWidget(thickness: 4, color: Colors.orangeAccent,  width: width, midi: 60),
-    GuitarStringWidget(thickness: 3.5, color: Colors.orangeAccent, width: width, midi: 60),
-    GuitarStringWidget(thickness: 3, color: Colors.orangeAccent,  width: width, midi: 60),
-    GuitarStringWidget(thickness: 2.5, color: Colors.orangeAccent,  width: width, midi: 60),
-    GuitarStringWidget(thickness: 2, color: Colors.white,  width: width, midi: 60),
-    GuitarStringWidget(thickness: 1.5, color: Colors.white, width: width, midi: 60)
+    GuitarStringWidget(thickness: 4, color: Colors.orangeAccent,  width: width, midi: 40),
+    GuitarStringWidget(thickness: 3.5, color: Colors.orangeAccent, width: width, midi: 45),
+    GuitarStringWidget(thickness: 3, color: Colors.orangeAccent,  width: width, midi: 50),
+    GuitarStringWidget(thickness: 2.5, color: Colors.orangeAccent,  width: width, midi: 55),
+    GuitarStringWidget(thickness: 2, color: Colors.white,  width: width, midi: 59),
+    GuitarStringWidget(thickness: 1.5, color: Colors.white, width: width, midi: 64)
   ];
 
   return new Container(
