@@ -11,5 +11,5 @@ class MidiUtils {
   static void unmute() => FlutterMidi.unmute();
 
   static void prepare(ByteData sf2, String name) =>
-      FlutterMidi.prepare(sf2: sf2, name: "Guitar.SF2");
+      FlutterMidi.prepare(sf2: sf2, name: name);
 }

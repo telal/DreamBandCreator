@@ -4,6 +4,9 @@ import 'package:flutter_midi/flutter_midi.dart';
 import 'package:flutter/services.dart';
 
 import 'midi/MidiUtils.dart';
+import 'accords.dart';
+
+const sound_font = "Guitar.SF2";
 
 void main() => runApp(MyApp());
 
@@ -11,14 +14,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Tutorials',
+      title: 'Dream Band Creator',
       home: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/guitar_cut.png"),
-            fit: BoxFit.cover,
-          ),
-        ),
         child: HomeScreen(),
       ),
     );
@@ -26,6 +23,9 @@ class MyApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatefulWidget {
+
+  Function(List<AccordItem> accordItems) onAccordButtonClicked;
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -40,49 +40,99 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    print("State: $state");
     _loadSoundFont();
   }
 
   void _loadSoundFont() async {
     MidiUtils.unmute();
     rootBundle.load("assets/sounds/Guitar.SF2").then((sf2) {
-      MidiUtils.prepare(sf2, "Guitar.SF2");
+      MidiUtils.prepare(sf2, sound_font);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: new GestureDetector(
-          onPanUpdate: (detail){
-            print("its Dragged");
-            print("global dx : "+detail.globalPosition.dx.toString());
-            print("global dy : "+detail.globalPosition.dy.toString());
 
-            RenderBox box = context.findRenderObject();
-            Offset local = box.globalToLocal(detail.globalPosition);
-
-            print("local dx : "+local.dx.toString());
-            print("local dy : "+local.dy.toString());
-          },
-        child: GuitarWidget(),
-      )
+    return Column(
+      children: [
+        AccordsPanelWidget(),
+        Expanded(
+            child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage("assets/images/guitar_cut.png"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: new GestureDetector(
+                  onPanUpdate: (detail) {
+                  },
+                  child: GuitarWidget(widget.onAccordButtonClicked),
+                )),
+            flex: 2)
+      ],
     );
   }
-
 }
 
-class GuitarWidget extends StatelessWidget {
-  static const int amount = 6;
+class AccordsPanelWidget extends StatelessWidget {
+
+  Function(String) onAccordButtonClicked;
 
   @override
   Widget build(BuildContext context) {
-    return _buildGuitarStringList(context, amount);
+    return Row(
+      children: List.generate(accords.entries.length,(index){
+        return Container(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            child: RaisedButton(
+                onPressed: () {
+                  onAccordButtonClicked(accords.entries.elementAt(index).key);
+                },
+                child: Text(accords.entries.elementAt(index).key, style: TextStyle(fontSize: 20))
+            ),
+          ),
+        );
+      }),
+    );
   }
 }
 
-Widget _buildGuitarStringList(BuildContext context, int stringAmount) {
+class GuitarWidget extends StatefulWidget {
+
+  final Function(List<AccordItem> accordItems) onAccordButtonClicked;
+  
+  GuitarWidget(this.onAccordButtonClicked);
+
+  @override
+  State<StatefulWidget> createState() => _GuitarWidgetState();
+}
+
+class _GuitarWidgetState extends State<GuitarWidget> {
+  
+  @override
+  Widget build(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    final width = MediaQuery.of(context).size.width;
+    return Stack(
+      children: [
+        _buildGuitarStringList(context),
+        Container(
+            decoration: new BoxDecoration(
+                borderRadius:  BorderRadius.circular(10.0)
+            ),
+            child: CustomPaint(
+                painter: _ClampedAccord(width, height, )
+            )
+        ),
+
+      ],
+    );
+  }
+}
+
+Widget _buildGuitarStringList(BuildContext context) {
   final width = MediaQuery.of(context).size.width;
   List<GuitarStringWidget> guitarStringWidgets = [
     GuitarStringWidget(thickness: 4, color: Colors.orangeAccent,  width: width, midi: 40),
@@ -159,6 +209,47 @@ class _GuitarStringState extends State<GuitarStringWidget> with SingleTickerProv
     _shakeController.dispose();
     super.dispose();
   }
+}
+
+class _ClampedAccord extends CustomPainter {
+
+  double _width;
+  double _height;
+
+  _ClampedAccord(this._width, this._height);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    var paint1 = Paint()
+      ..color = Color(0xff638965).withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+        Offset(_width - 20, 10) & Size(_width - 20, _height - 100), paint1
+    );
+    _drawTextAt("@", Offset(_width - 20, 10), canvas);
+  }
+
+  void _drawTextAt(String text, Offset position, Canvas canvas) {
+    final textStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 30,
+    );
+    final textSpan = TextSpan(
+      text: text,
+      style: textStyle,
+    );
+    final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center
+    );
+    textPainter.layout(minWidth: 0, maxWidth: 0);
+    Offset drawPosition = Offset(position.dx, position.dy - (textPainter.height / 2));
+    textPainter.paint(canvas, drawPosition);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter old) => false;
 }
 
 class StringPainter extends CustomPainter {
